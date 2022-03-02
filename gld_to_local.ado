@@ -5,7 +5,7 @@
 
 program define gld_to_local
 
-syntax, gld(string) lokal(string) [clear countries(string)]
+syntax, Gld(string) Lokal(string) [clear Countries(string)]
 
 
 *******************************************************************
@@ -76,12 +76,6 @@ if `check' == 1 {
 	display in red "Please write the local path without the last forward slash (/)"
 	exit
 }
-
-
-* -- 1.6 Clear if requested
-if `"`clear'"' == "clear" {
-	clear
-} 
 
 
 *******************************************************************
