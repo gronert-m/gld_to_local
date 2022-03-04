@@ -91,6 +91,16 @@ if "`countries'" == "" {
 	gen check = regexm(dirname, "GLD/Data/Harmonized$")
 	keep if check == 1
 	drop check
+	
+	* Create var that takes out survey core (i.e., without version numbers)
+	gen survey_core = regexs(1) if regexm(filename, "(^[a-zA-Z][a-zA-Z][a-zA-Z]_[0-9][0-9][0-9][0-9]_[a-zA-Z0-9-]+)(_[vV][0-9][0-9]_M_[vV][0-9][0-9]_A)_[a-zA-Z_]+\.dta")
+		
+	* By construction of the name (surveycore_v##_M_v##_A), the alphanumeric order will
+	* put the most recent one last. Thus, surveycore_v01_M_v03_A is after surveycore_v01_M_v02_A,
+	* both are before surveycore_v02_M_v01_A.
+	bys survey_core: gen survey_number = _n
+	bys survey_core: egen survey_numb_max = max(survey_number)
+	keep if survey_numb_max == survey_number
 		
 	gen gld_path = dirname + "/" + filename
 	gen common_path = regexs(1) if regexm(gld_path, "`gld'([^.]*)")
@@ -160,6 +170,16 @@ if "`countries'" != "" {
 		gen check = regexm(dirname, "GLD/Data/Harmonized$")
 		keep if check == 1
 		drop check
+		
+		* Create var that takes out survey core (i.e., without version numbers)
+		gen survey_core = regexs(1) if regexm(filename, "(^[a-zA-Z][a-zA-Z][a-zA-Z]_[0-9][0-9][0-9][0-9]_[a-zA-Z0-9-]+)(_[vV][0-9][0-9]_M_[vV][0-9][0-9]_A)_[a-zA-Z_]+\.dta")
+		
+		* By construction of the name (surveycore_v##_M_v##_A), the alphanumeric order will
+		* put the most recent one last. Thus, surveycore_v01_M_v03_A is after surveycore_v01_M_v02_A,
+		* both are before surveycore_v02_M_v01_A.
+		bys survey_core: gen survey_number = _n
+		bys survey_core: egen survey_numb_max = max(survey_number)
+		keep if survey_numb_max == survey_number
 		
 		gen gld_path = dirname + "/" + filename
 		gen common_path = regexs(1) if regexm(gld_path, "`gld_folder'([^.]*)")
