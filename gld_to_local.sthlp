@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.0 2mar2022 }{...}
+{* *! version 1.0 7mar2022 }{...}
 {findalias asfradohelp}{...}
 {vieweralsosee "" "--"}{...}
 {vieweralsosee "[R] help" "help help"}{...}
@@ -29,13 +29,14 @@
 {syntab:Optional arguments}
 {synopt:{opt clear}}Clear data in memory before starting{p_end}
 {synopt:{opt c:ountries(string)}}List of three letter country codes of specific countries to evaluate{p_end}
+{synopt:{opt d:etailed}}Additionally check whether each variable of either location are the same{p_end}
 
 
 {marker description}{...}
 {title:Description}
 
 {pstd}
-{cmd:gld_to_local} Evaluates whether a) the files in the GLD server are present in the local copy (e..g, alerts if there are newer files not yet in the local copy) and b) there are differences between the files of the same filename.
+{cmd:gld_to_local} Evaluates a) whether the files in the GLD server are present in the local copy (e..g, alerts if there are newer files not yet in the local copy - standard behaviour) and b) whether there are differences between the files of the same filename (if option it:detailed selected).
 
 	
 {marker options}{...}
@@ -57,6 +58,10 @@
 {phang}
 {opt countries(string)} List of three letter ISO country codes for countries to compare so as to not evaluate the whole server. Each country should be in upper case letters (as per GLD server structure) and separated by space. For example countries(IND KOR ESP), not countries(ind Kor spain) or countries(IND_KOR_ESP)
 	 
+{phang}
+{opt detailed} Do not just compare filenames (i.e., whether file [path_gld]/A.dta can be found in [path_lokal]/A.dta) but check in depth whether each variable of either file are the same (e.g., if, despite the same filename content is different)
+
+
 
 {marker examples}{...}
 {title:Examples}
@@ -64,3 +69,8 @@
 {phang}{cmd:. gld_to_local, gld(Y:/GLD) lokal(C:/Users/wb123456/OneDrive - WBG/Documents/Country Work)}{p_end}
 
 {phang}{cmd:. gld_to_local, gld(Y:/GLD) lokal(C:/Users/wb123456/OneDrive - WBG/Documents/Country Work) clear countries(IND)}{p_end}
+
+{phang}{cmd:. gld_to_local, gld(Y:/GLD) lokal(C:/Users/wb123456/OneDrive - WBG/Documents/Country Work) clear countries(IND) detailed}{p_end}
+
+{pstd} The same example as above can be reduced using the command shortcuts{p_end}
+{phang}{cmd:. gld_to_local, g(Y:/GLD) l(C:/Users/wb123456/OneDrive - WBG/Documents/Country Work) clear c(IND) d}{p_end}
