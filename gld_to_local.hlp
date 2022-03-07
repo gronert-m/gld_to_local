@@ -1,0 +1,52 @@
+{smcl}
+{* 7 March 2022}{...}
+{hline}
+{cmd:help gld_to_local}
+{hline}
+
+{title:Title}
+
+{p2colset 5 17 19 2}{...}
+{p2col: {hi:gld_to_local} {hline 2}}Evaluate equality between GLD files on server and local copies{p_end}
+{p2colreset}{...}
+
+
+{title:Syntax}
+
+{p 8 17 2}{cmd:gld_to_local} 
+[{cmd:,} {opt g:ld(string)}
+{opt l:okal(string)} 
+{opt clear}
+{opt c:ountries(string)}
+{opt d:etailed}]
+
+{title:Description}
+
+{p 4 4 2}{cmd:gld_to_local} Evaluates a) whether the files in the GLD server are present in the local copy (e..g, alerts if there are newer files not yet in the local copy - standard behaviour) and b) whether there are differences between the files of the same filename (if option {it:detailed} selected). 
+
+{title: Main Options} 
+
+{p 4 4 2}{opt gld(string)} specifies the path to the GLD server. Please use forward slashes “/” and do not end on one. For example, use Y:/GLD and not Y:\GLD or Y:/GLD/.
+
+{p 4 4 2}{opt lokal(string)} specifies the path to the local main directory containing the GLD server copy. Same rules as for gld. 
+
+{title: Additonal Options} 
+
+{p 4 4 2}{cmd:clear} will clear memory before running the command. 
+
+{p 4 4 2}{opt countries(string)} contains the list of three letter ISO country codes for countries to compare to not evaluate the whole server.  Each country in upper case letters (as per GLD server structure) and separated by space. Do not use countries(ind Kor spain) or countries(IND_KOR_ESP) but rather countries(IND KOR ESP). 
+
+{p 4 4 2}{opt detailed} specifies and in-depth comparison.  Command will not just compare filenames (i.e., whether file [path_gld]/A.dta can be found in [path_lokal]/A.dta) but check in depth whether each variable of either file are the same (e.g., if, despite the same filename, file content is different). 
+
+{title:Examples}
+
+{p 4 4 2}{cmd:. gld_to_local, gld(Y:/GLD) lokal(C:/Users/wb123456/OneDrive - WBG/Documents/Country Work)}{p_end}
+{p 4 4 2}{cmd:. gld_to_local, gld(Y:/GLD) lokal(C:/Users/wb123456/OneDrive - WBG/Documents/Country Work) clear countries(IND)}{p_end}
+{p 4 4 2}{cmd:. gld_to_local, gld(Y:/GLD) lokal(C:/Users/wb123456/OneDrive - WBG/Documents/Country Work) clear countries(IND) detailed}{p_end}
+{p 4 4 2}{cmd:. gld_to_local, g(Y:/GLD) l(C:/Users/wb123456/OneDrive - WBG/Documents/Country Work) clear c(IND) d}{p_end}
+
+
+{title:Author}
+
+{p 4 4 2}Mario Gronert, World Bank, UK{break}
+mgronert@worldbank.org
