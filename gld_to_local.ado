@@ -93,6 +93,7 @@ if "`countries'" == "" {
 	
 	* Create var that takes out survey core (i.e., without version numbers)
 	gen survey_core = regexs(1) if regexm(filename, "(^[a-zA-Z][a-zA-Z][a-zA-Z]_[0-9][0-9][0-9][0-9]_[a-zA-Z0-9-]+)(_[vV][0-9][0-9]_M_[vV][0-9][0-9]_A)_[a-zA-Z_]+\.dta")
+	gen country = substr(survey_core,1,3)
 		
 	* By construction of the name (surveycore_v##_M_v##_A), the alphanumeric order will
 	* put the most recent one last. Thus, surveycore_v01_M_v03_A is after surveycore_v01_M_v02_A,
@@ -103,8 +104,7 @@ if "`countries'" == "" {
 	quietly: keep if survey_numb_max == survey_number
 		
 	gen gld_path = dirname + "/" + filename
-	gen common_path = regexs(1) if regexm(gld_path, "`gld'([^.]*)")
-	gen lokal_path = "`lokal'" + common_path + ".dta"
+	gen lokal_path = "`lokal'" + "/" + country + "/" + filename
 	
 	* Go through files (each file defined in each row), confirm they exist in local
 	forvalues row = 1/`=_N'{
@@ -114,11 +114,9 @@ if "`countries'" == "" {
 	
 		cap confirm	file "`lokal_path_row'"
 		if _rc != 0 {
-			di as error "There is a file on the GLD server not present on your local copy"
-			di as error _n "File on GLD is "
+			di as error "The file "
 			di _n "`gld_path_row'"
-			di as error _n "File on local is"
-			di _n "`lokal_path_row'"
+			di as error _n "is on the GLD server but not present on your local copy"
 			* Add an assertion that will stop in a way that exit won't
 			qui: assert _rc == 0
 		* Close if _rc != 0
@@ -152,6 +150,7 @@ if "`countries'" != "" {
 		
 		* Create var that takes out survey core (i.e., without version numbers)
 		gen survey_core = regexs(1) if regexm(filename, "(^[a-zA-Z][a-zA-Z][a-zA-Z]_[0-9][0-9][0-9][0-9]_[a-zA-Z0-9-]+)(_[vV][0-9][0-9]_M_[vV][0-9][0-9]_A)_[a-zA-Z_]+\.dta")
+		gen country = substr(survey_core,1,3)
 		
 		* By construction of the name (surveycore_v##_M_v##_A), the alphanumeric order will
 		* put the most recent one last. Thus, surveycore_v01_M_v03_A is after surveycore_v01_M_v02_A,
@@ -162,8 +161,7 @@ if "`countries'" != "" {
 		quietly: keep if survey_numb_max == survey_number
 		
 		gen gld_path = dirname + "/" + filename
-		gen common_path = regexs(1) if regexm(gld_path, "`gld_folder'([^.]*)")
-		gen lokal_path = "`lokal'/`country'" + common_path + ".dta"
+		gen lokal_path = "`lokal'" + "/" + country + "/" + filename
 
 		* Go through files (each file defined in each row), confirm they exist in local
 		forvalues row = 1/`=_N'{
@@ -173,11 +171,9 @@ if "`countries'" != "" {
 	
 			cap confirm	file "`lokal_path_row'"
 			if _rc != 0 {
-			    di as error "There is a file on the GLD server not present on your local copy"
-				di as error _n "File on GLD is "
+			    di as error "The file "
 				di _n "`gld_path_row'"
-				di as error _n "File on local is"
-				di _n "`lokal_path_row'"
+				di as error _n "is on the GLD server but not present on your local copy"
 				* Add an assertion that will stop in a way that exit won't
 				qui: assert _rc == 0
 			* Close if _rc != 0
@@ -207,7 +203,8 @@ if "`detailed'" != "" & "`countries'" == "" {
 	
 	* Create var that takes out survey core (i.e., without version numbers)
 	gen survey_core = regexs(1) if regexm(filename, "(^[a-zA-Z][a-zA-Z][a-zA-Z]_[0-9][0-9][0-9][0-9]_[a-zA-Z0-9-]+)(_[vV][0-9][0-9]_M_[vV][0-9][0-9]_A)_[a-zA-Z_]+\.dta")
-		
+	gen country = substr(survey_core,1,3)
+	
 	* By construction of the name (surveycore_v##_M_v##_A), the alphanumeric order will
 	* put the most recent one last. Thus, surveycore_v01_M_v03_A is after surveycore_v01_M_v02_A,
 	* both are before surveycore_v02_M_v01_A.
@@ -217,8 +214,7 @@ if "`detailed'" != "" & "`countries'" == "" {
 	quietly: keep if survey_numb_max == survey_number
 		
 	gen gld_path = dirname + "/" + filename
-	gen common_path = regexs(1) if regexm(gld_path, "`gld'([^.]*)")
-	gen lokal_path = "`lokal'" + common_path + ".dta"
+	gen lokal_path = "`lokal'" + "/" + country + "/" + filename
 	
 	* Go through files comparing server with local
 	forvalues row = 1/`=_N'{
@@ -268,6 +264,7 @@ if "`detailed'" != "" & "`countries'" != "" {
 		
 		* Create var that takes out survey core (i.e., without version numbers)
 		gen survey_core = regexs(1) if regexm(filename, "(^[a-zA-Z][a-zA-Z][a-zA-Z]_[0-9][0-9][0-9][0-9]_[a-zA-Z0-9-]+)(_[vV][0-9][0-9]_M_[vV][0-9][0-9]_A)_[a-zA-Z_]+\.dta")
+		gen country = substr(survey_core,1,3)
 		
 		* By construction of the name (surveycore_v##_M_v##_A), the alphanumeric order will
 		* put the most recent one last. Thus, surveycore_v01_M_v03_A is after surveycore_v01_M_v02_A,
@@ -278,8 +275,7 @@ if "`detailed'" != "" & "`countries'" != "" {
 		quietly: keep if survey_numb_max == survey_number
 		
 		gen gld_path = dirname + "/" + filename
-		gen common_path = regexs(1) if regexm(gld_path, "`gld_folder'([^.]*)")
-		gen lokal_path = "`lokal'/`country'" + common_path + ".dta"
+		gen lokal_path = "`lokal'" + "/" + country + "/" + filename
 
 		* Go through files comparing server with local
 		forvalues row = 1/`=_N'{
