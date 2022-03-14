@@ -15,7 +15,7 @@ syntax, Gld(string) Lokal(string) [clear Countries(string) Detailed]
 * -- 1.1 Clear data if requested
 if `"`clear'"' == "clear" {
 	clear
-} 
+}
 
 
 * -- 1.2 Evaluate arguments gld and lokal
@@ -36,7 +36,7 @@ if _rc != 0 {
 
 * -- 1.3 Evaluate countries are CCC
 if "`countries'"!="" {
-	
+
 	* Loop over each element of countries
 	foreach country of local countries{
 		* Evaluate each is an upper case three letter code
@@ -46,7 +46,7 @@ if "`countries'"!="" {
 			display in red "The code `country' is not a three capital letter code (like IND, ESP), please review"
 			exit
 		}
-	}		
+	}
 }
 
 
@@ -77,240 +77,173 @@ if `check' == 1 {
 
 
 *******************************************************************
-** Step 2 - Check local has latest files if no countries --> All folders
+** Step 2 - Obtain list of files, reduce to necessary
 *******************************************************************
 
-if "`countries'" == "" {
-* if no country specified, do all    	
-	
-	* Run filelist to recursively get all files with .dta extension
-	quietly: filelist, dir("`gld'") pat("*.dta")
-		
-	* Create check to only look at files in the harmonized data folder of GLD server
-	gen check = regexm(dirname, "GLD/Data/Harmonized$")
-	quietly: keep if check == 1
-	drop check
-	
-	* Create var that takes out survey core (i.e., without version numbers)
-	gen survey_core = regexs(1) if regexm(filename, "(^[a-zA-Z][a-zA-Z][a-zA-Z]_[0-9][0-9][0-9][0-9]_[a-zA-Z0-9-]+)(_[vV][0-9][0-9]_M_[vV][0-9][0-9]_A)_[a-zA-Z_]+\.dta")
-	gen country = substr(survey_core,1,3)
-		
-	* By construction of the name (surveycore_v##_M_v##_A), the alphanumeric order will
-	* put the most recent one last. Thus, surveycore_v01_M_v03_A is after surveycore_v01_M_v02_A,
-	* both are before surveycore_v02_M_v01_A.
-	sort filename
-	bys survey_core: gen survey_number = _n
-	bys survey_core: egen survey_numb_max = max(survey_number)
-	quietly: keep if survey_numb_max == survey_number
-		
-	gen gld_path = dirname + "/" + filename
-	gen lokal_path = "`lokal'" + "/" + country + "/" + filename
-	
-	* Go through files (each file defined in each row), confirm they exist in local
-	forvalues row = 1/`=_N'{
-		
-		local lokal_path_row = lokal_path[`row']
-		local gld_path_row	 = gld_path[`row']
-	
-		cap confirm	file "`lokal_path_row'"
-		if _rc != 0 {
-			di as error "The file "
-			di _n "`gld_path_row'"
-			di as error _n "is on the GLD server but not present on your local copy"
-			* Add an assertion that will stop in a way that exit won't
-			qui: assert _rc == 0
-		* Close if _rc != 0
-		}
-	* Close forvalues 1/N	
-	}
-* Close if no countries defined
-}
+* Obtain all *dta in GLD
 
+quietly: filelist, dir("`gld'") pat("*.dta")
 
-*******************************************************************
-** Step 3 -  Check local has latest files of specified countries 
-*******************************************************************
+* Create check to only look at files in the harmonized data folder of GLD server
+gen check = regexm(dirname, "GLD/Data/Harmonized$")
+quietly: keep if check == 1
+drop check
 
+* Create var that takes out survey core (i.e., without version numbers)
+gen survey_core = regexs(1) if regexm(filename, "(^[a-zA-Z][a-zA-Z][a-zA-Z]_[0-9][0-9][0-9][0-9]_[a-zA-Z0-9-]+)(_[vV][0-9][0-9]_M_[vV][0-9][0-9]_A)_[a-zA-Z_]+\.dta")
+gen country = substr(survey_core,1,3)
+
+* By construction of the name (surveycore_v##_M_v##_A), the alphanumeric order will
+* put the most recent one last. Thus, surveycore_v01_M_v03_A is after surveycore_v01_M_v02_A,
+* both are before surveycore_v02_M_v01_A.
+sort filename
+bys survey_core: gen survey_number = _n
+bys survey_core: egen survey_numb_max = max(survey_number)
+quietly: keep if survey_numb_max == survey_number
+
+* Create variables with full paths
+gen gld_path = dirname + "/" + filename
+gen lokal_path = "`lokal'" + "/" + country + "/" + filename
+
+* If countries specified, reduce to those countries only
 if "`countries'" != "" {
-* There is content (and it has been vetted in step 1.3)
 
-	* Loop through each country
-	foreach country of local countries {
-	    
-	    * Create local with path to country folder
-		local gld_folder "`gld'/`country'"
-		
-		* Run filelist to recursively get all files with .dta extension
-		quietly: filelist, dir("`gld_folder'") pat("*.dta")
-		
-		* Create check to only look at files in the harmonized data folder of GLD server
-		gen check = regexm(dirname, "GLD/Data/Harmonized$")
-		quietly: keep if check == 1
-		drop check
-		
-		* Create var that takes out survey core (i.e., without version numbers)
-		gen survey_core = regexs(1) if regexm(filename, "(^[a-zA-Z][a-zA-Z][a-zA-Z]_[0-9][0-9][0-9][0-9]_[a-zA-Z0-9-]+)(_[vV][0-9][0-9]_M_[vV][0-9][0-9]_A)_[a-zA-Z_]+\.dta")
-		gen country = substr(survey_core,1,3)
-		
-		* By construction of the name (surveycore_v##_M_v##_A), the alphanumeric order will
-		* put the most recent one last. Thus, surveycore_v01_M_v03_A is after surveycore_v01_M_v02_A,
-		* both are before surveycore_v02_M_v01_A.
-		sort filename
-		bys survey_core: gen survey_number = _n
-		bys survey_core: egen survey_numb_max = max(survey_number)
-		quietly: keep if survey_numb_max == survey_number
-		
-		gen gld_path = dirname + "/" + filename
-		gen lokal_path = "`lokal'" + "/" + country + "/" + filename
+  * Generate variable to denote requested countries
+  quietly: gen requested_countries = .
 
-		* Go through files (each file defined in each row), confirm they exist in local
-		forvalues row = 1/`=_N'{
-		    
-			local lokal_path_row = lokal_path[`row']
-			local gld_path_row	 = gld_path[`row']
-	
-			cap confirm	file "`lokal_path_row'"
-			if _rc != 0 {
-			    di as error "The file "
-				di _n "`gld_path_row'"
-				di as error _n "is on the GLD server but not present on your local copy"
-				* Add an assertion that will stop in a way that exit won't
-				qui: assert _rc == 0
-			* Close if _rc != 0
-			}
-		* Close forvalues row = 1/`=_N'	
-		}
-	* Close foreach country
+  * Loop through countries and give value 1 to requested_countries
+  foreach country of local countries {
+    quietly: replace requested_countries = 1 if country == "`country'"
+  }
+
+  * Keep ony requested_countries
+  quietly: keep if requested_countries == 1
+  drop requested_countries
+
+}
+
+* Create variables for missing and unequal files
+quietly: gen missing_files = .
+quietly: gen unequal_files = .
+
+
+*******************************************************************
+** Step 3 - Check local has latest files
+*******************************************************************
+
+* Go through files (each file defined in each row), confirm they exist in local
+* if they do not exist, assign value 1 to variable detect_missing
+forvalues row = 1/`=_N'{
+
+	* Create locals that contain the row's value 
+	local lokal_path_row = lokal_path[`row']
+	local gld_path_row	 = gld_path[`row']
+
+	cap confirm	file "`lokal_path_row'"
+	if _rc != 0 {
+		quietly: replace missing_files = 1 in `row'
+	* Close if _rc != 0
 	}
-* Close if "`countries'" != ""
+* Close forvalues 1/N
+}
+
+* Now obtain gld_path of cases with missing_files == 1
+quietly: levelsof gld_path if missing_files == 1, local(missing_cases)
+local n : word count `missing_cases'
+forvalues i = 1/`n' {
+
+	* Create a local with the individual missing case
+	local missing_case : word `i' of `missing_cases'
+
+	if `i' == 1 {
+
+		* If first, put info text
+		dis as error "The following file(s) from the GLD server is(are) not present on your local copy"
+		di _n "`missing_case'"
+	}
+	else {
+		* If there are more, just list them
+		di "`missing_case'"
+	}
+
+	* If last run, exit
+	if `i' == `n' {
+		exit
+	}
+* Close forvalues 1/`n'
 }
 
 
 *******************************************************************
-** Step 4 -  Compare file contents if no country defined 
+** Step 4 - Check local has *same* files - if detailed option requested
 *******************************************************************
 
-if "`detailed'" != "" & "`countries'" == "" {
-* detailed option requested but no countries specified    
-	
-	* Run filelist to recursively get all files with .dta extension
-	quietly: filelist, dir("`gld'") pat("*.dta")
-		
-	* Create check to only look at files in the harmonized data folder of GLD server
-	gen check = regexm(dirname, "GLD/Data/Harmonized$")
-	quietly: keep if check == 1
-	drop check
-	
-	* Create var that takes out survey core (i.e., without version numbers)
-	gen survey_core = regexs(1) if regexm(filename, "(^[a-zA-Z][a-zA-Z][a-zA-Z]_[0-9][0-9][0-9][0-9]_[a-zA-Z0-9-]+)(_[vV][0-9][0-9]_M_[vV][0-9][0-9]_A)_[a-zA-Z_]+\.dta")
-	gen country = substr(survey_core,1,3)
-	
-	* By construction of the name (surveycore_v##_M_v##_A), the alphanumeric order will
-	* put the most recent one last. Thus, surveycore_v01_M_v03_A is after surveycore_v01_M_v02_A,
-	* both are before surveycore_v02_M_v01_A.
-	sort filename
-	bys survey_core: gen survey_number = _n
-	bys survey_core: egen survey_numb_max = max(survey_number)
-	quietly: keep if survey_numb_max == survey_number
-		
-	gen gld_path = dirname + "/" + filename
-	gen lokal_path = "`lokal'" + "/" + country + "/" + filename
-	
+if "`detailed'" != "" {
+
 	* Go through files comparing server with local
 	forvalues row = 1/`=_N'{
-		
+
+		* Create locals that contain the row's value 
 		local lokal_path_row = lokal_path[`row']
 		local gld_path_row	 = gld_path[`row']
 		
+		* Create a local that we'll set to 1 if files are unequal
+		local unequal_detector = 0	
+		
+		* Since comparing requires opening the file, checking it to other, 
+		* we need to set a preserve command to come back
 		preserve
 		use `gld_path_row', clear
 		capture cf _all using "`lokal_path_row'"
 		if _rc != 0 {
-			di as error "There are differences between GLD server and local copy"
-			di as error _n "File on GLD"
-			di _n "`gld_path_row'"
-			di as error _n "is unequal to file on local"
-			di _n "`lokal_path_row'"
-			* Add an assertion that will stop in a way that exit won't
-			qui: assert _rc == 0
+			local unequal_detector = 1
 		* Close if _rc != 0
 		}
 		restore
+		quietly: replace unequal_files = 1 if `unequal_detector' == 1 in `row'
 	* Close forvalues 1/N
 	}
-* Close if detailed and no countries
-}
 
-*******************************************************************
-** Step 5 -  Compare file contents for specified countries
-*******************************************************************
 
-if "`detailed'" != "" & "`countries'" != "" {
-* detailed option requested and country/countries specified
-    
-	* Loop through each country
-	foreach country of local countries {
-	    
-	    * Create local with path to country folder
-		local gld_folder "`gld'/`country'"
-		
-		* Run filelist to recursively get all files with .dta extension
-		quietly: filelist, dir("`gld_folder'") pat("*.dta")
-		
-		* Create check to only look at files in the harmonized data folder of GLD server
-		gen check = regexm(dirname, "GLD/Data/Harmonized$")
-		quietly: keep if check == 1
-		drop check
-		
-		* Create var that takes out survey core (i.e., without version numbers)
-		gen survey_core = regexs(1) if regexm(filename, "(^[a-zA-Z][a-zA-Z][a-zA-Z]_[0-9][0-9][0-9][0-9]_[a-zA-Z0-9-]+)(_[vV][0-9][0-9]_M_[vV][0-9][0-9]_A)_[a-zA-Z_]+\.dta")
-		gen country = substr(survey_core,1,3)
-		
-		* By construction of the name (surveycore_v##_M_v##_A), the alphanumeric order will
-		* put the most recent one last. Thus, surveycore_v01_M_v03_A is after surveycore_v01_M_v02_A,
-		* both are before surveycore_v02_M_v01_A.
-		sort filename
-		bys survey_core: gen survey_number = _n
-		bys survey_core: egen survey_numb_max = max(survey_number)
-		quietly: keep if survey_numb_max == survey_number
-		
-		gen gld_path = dirname + "/" + filename
-		gen lokal_path = "`lokal'" + "/" + country + "/" + filename
+	* Now obtain gld_path of cases with unequal_files == 1
+	quietly: levelsof gld_path if unequal_files == 1, local(unequal_cases)
+	local n : word count `unequal_cases'
+	forvalues i = 1/`n' {
 
-		* Go through files comparing server with local
-		forvalues row = 1/`=_N'{
-			
-			local lokal_path_row = lokal_path[`row']
-			local gld_path_row	 = gld_path[`row']
-			
-			preserve
-			use `gld_path_row', clear
-			capture cf _all using "`lokal_path_row'"
-			if _rc != 0 {
-				di as error "There are differences between GLD server and local copy"
-				di as error _n "File on GLD"
-				di _n "`gld_path_row'"
-				di as error _n "is unequal to file on local"
-				di _n "`lokal_path_row'"
-				* Add an assertion that will stop in a way that exit won't
-				qui: assert _rc == 0
-			* Close if _rc != 0
-			}
-			restore
-		* Close forvalues 1/N
+		* Create a local with the individual unequal case
+		local unequal_case : word `i' of `unequal_cases'
+
+		if `i' == 1 {
+
+			* If first, put info text
+			dis as error "The following file(s) from the GLD server is(are) *unequal* your local copy"
+			di _n "`unequal_case'"
 		}
-		
-	* Close foreach country
+		else {
+			* If there are more, just list them
+			di "`unequal_case'"
+		}
+
+		* If last run, exit
+		if `i' == `n' {
+			exit
+		}
+	* Close forvalues 1/`n'
 	}
-* Close detailed with countries	
+
+* Close if detailed requested 
 }
 
+
+*******************************************************************
+** Step 5 - Report all good at end if all tests passed
+*******************************************************************
 
 dis " " _newline
 dis "Your local server seems updated with latest versions on the server."	
 dis "          _" _newline "         //" _newline "   _    //" _newline "   \\  //" _newline "    \\//" _newline "     ‾‾" _newline 
 dis "Please proceed with the data work"
 clear
-	
-	
+
+
 end
