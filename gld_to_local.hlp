@@ -36,7 +36,7 @@
 
 {p 4 4 2}{opt countries(string)} contains the list of three letter ISO country codes for countries to compare to not evaluate the whole server.  Each country in upper case letters (as per GLD server structure) and separated by space. Do not use countries(ind Kor spain) or countries(IND_KOR_ESP) but rather countries(IND KOR ESP). 
 
-{p 4 4 2}{opt detailed} specifies and in-depth comparison.  Command will not just compare filenames (i.e., whether file [path_gld]/A.dta can be found in [path_lokal]/A.dta) but check in depth whether each variable of either file are the same (e.g., if, despite the same filename, file content is different). 
+{p 4 4 2}{opt detailed} specifies and in-depth comparison.  Command will not just compare filenames (i.e., whether file [path_gld]/A.dta can be found in [path_lokal]/A.dta) but check in depth whether each variable of either file are the same (e.g., if, despite the same filename, file content is different). Note that, if one or more files are missing in the folder, this process (which usually is bandwith intensive as each file needs to be read in) is skipped and missing files info is reported first. Only if there are no files missing will the detailed option compare files.
 
 {title:Examples}
 
